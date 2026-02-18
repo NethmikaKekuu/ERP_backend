@@ -1,2 +1,2 @@
-# ERP_backend
+# ERP Backend
 The backend for the project ERP.
