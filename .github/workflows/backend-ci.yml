@@ -1,0 +1,33 @@
+name: Docs Structure Check
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify required Structure
+        run: |
+          test -f README.md
+          test -d docs
+          echo "Project structure is valid"
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ERP_Backend.slnx
+
+      - name: Build solution
+        run: dotnet build ERP_Backend.slnx --no-restore --configuration Release
+        
