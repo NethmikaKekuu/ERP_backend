@@ -1,0 +1,22 @@
+name: CD Dev - Build & Push AuthService to ACR
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker login to ACR
+        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+      - name: Build and push image
+        run: |
+          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/authservice:latest"
+          docker build -t "$IMAGE" -f src/AuthService/Dockerfile src/AuthService
+          docker push "$IMAGE"
