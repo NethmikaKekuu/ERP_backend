@@ -17,6 +17,9 @@ jobs:
 
       - name: Build and push image
         run: |
-          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/authservice:latest"
-          docker build -t "$IMAGE" -f src/AuthService/Dockerfile src/AuthService
-          docker push "$IMAGE"
+          IMAGE_SHA="${{ secrets.ACR_LOGIN_SERVER }}/authservice:${{ github.sha }}"
+          IMAGE_LATEST="${{ secrets.ACR_LOGIN_SERVER }}/authservice:latest"
+
+          docker build -t "$IMAGE_SHA" -t "$IMAGE_LATEST" -f src/AuthService/Dockerfile src/AuthService
+          docker push "$IMAGE_SHA"
+          docker push "$IMAGE_LATEST"
