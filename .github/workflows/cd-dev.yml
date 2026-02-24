@@ -15,6 +15,17 @@ jobs:
       - name: Install mysql client
         run: sudo apt-get update && sudo apt-get install -y mysql-client
 
+      - name: Debug DB env (safe)
+        shell: bash
+        env:
+          MYSQL_HOST: ${{ secrets.AZ_MYSQL_HOST }}
+          MYSQL_DB: ${{ secrets.AZ_MYSQL_DB }}
+          MYSQL_USER: ${{ secrets.AZ_MYSQL_MIGRATOR_USER }}
+        run: |
+          echo "MYSQL_HOST=$MYSQL_HOST"
+          echo "MYSQL_DB=$MYSQL_DB"
+          echo "MYSQL_USER=$MYSQL_USER"
+
       - name: Apply DB migrations (Azure MySQL)
         shell: bash 
         env: 
