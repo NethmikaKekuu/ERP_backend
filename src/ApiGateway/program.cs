@@ -67,12 +67,8 @@ try
         });
 
     // Fallback policy
-    builder.Services.AddAuthorization(options =>
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .Build();
-    });
+    builder.Services.AddAuthorization();
+
 
     // ── Ocelot ────────────────────────────────────────────────────────────────
     builder.Services.AddOcelot(builder.Configuration);
