@@ -38,7 +38,7 @@ namespace ApiGateway.Tests.Controllers
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             var service = GetProperty(okResult.Value, "service");
-            Assert.Equal("InsightERP API Gateway", service);
+            Assert.Equal("ApiGateway", service);
             
             var framework = GetProperty(okResult.Value, "framework");
             Assert.Equal(".NET 9.0", framework);
