@@ -40,6 +40,17 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// ── CORS — allow the Vite dev server ─────────────────────────────────────────
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+        policy.WithOrigins("http://localhost:5173")   // Vite default port
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -89,7 +100,8 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseAuthentication();   // MUST come before UseAuthorization
+app.UseCors("FrontendDev");        // MUST come before auth
+app.UseAuthentication();           // MUST come before UseAuthorization
 app.UseAuthorization();
 
 app.MapControllers();
