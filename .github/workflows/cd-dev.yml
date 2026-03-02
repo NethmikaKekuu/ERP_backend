@@ -1,11 +1,16 @@
-name: CD Dev - Migrate dev - Build & Push AuthService to ACR
+name: CD Dev — Migrate, Build & Push all services, Deploy to Azure
 
 on:
   push:
     branches: [ "dev" ]
 
+# Required for OIDC authentication (passwordless Azure login)
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,8 +32,8 @@ jobs:
           echo "MYSQL_USER=$MYSQL_USER"
 
       - name: Apply DB migrations (Azure MySQL)
-        shell: bash 
-        env: 
+        shell: bash
+        env:
           MYSQL_HOST: ${{ secrets.AZ_MYSQL_HOST }}
           MYSQL_DB: ${{ secrets.AZ_MYSQL_DB }}
           MYSQL_USER: ${{ secrets.AZ_MYSQL_MIGRATOR_USER }}
@@ -39,18 +44,52 @@ jobs:
       - name: Docker login to ACR
         run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-      - name: Build and push image
+      - name: Build and push all images to ACR
         run: |
-          IMAGE_SHA="${{ secrets.ACR_LOGIN_SERVER }}/authservice:${{ github.sha }}"
-          IMAGE_LATEST="${{ secrets.ACR_LOGIN_SERVER }}/authservice:latest"
+          SERVICES=(apigateway analyticsservice authservice customerservice forecastservice orderservice predictionservice productservice)
+          SRC_DIRS=(ApiGateway AnalyticsService AuthService CustomerService ForecastService OrderService PredictionService ProductService)
 
-          docker build -t "$IMAGE_SHA" -t "$IMAGE_LATEST" -f src/AuthService/Dockerfile src/AuthService
-          docker push "$IMAGE_SHA"
-          docker push "$IMAGE_LATEST"
+          for i in "${!SERVICES[@]}"; do
+            SVC="${SERVICES[$i]}"
+            DIR="${SRC_DIRS[$i]}"
+            IMAGE_SHA="${{ secrets.ACR_LOGIN_SERVER }}/${SVC}:${{ github.sha }}"
+            IMAGE_LATEST="${{ secrets.ACR_LOGIN_SERVER }}/${SVC}:latest"
 
-      - name: Smoke test (health + db-test)
-        run: | 
-          echo "Waiting 20s for Container App revision..."
-          sleep 20
+            echo ">>> Building ${SVC}..."
+            docker build -t "$IMAGE_SHA" -t "$IMAGE_LATEST" -f "src/${DIR}/Dockerfile" "src/${DIR}"
+
+            echo ">>> Pushing ${SVC}..."
+            docker push "$IMAGE_SHA"
+            docker push "$IMAGE_LATEST"
+          done
+
+      - name: Azure Login (OIDC — no password needed)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy all services to Azure Container Apps
+        run: |
+          SERVICES=(apigateway    analyticsservice    authservice    customerservice    forecastservice    orderservice    predictionservice    productservice)
+          APP_NAMES=(apigateway-dev analyticsservice-dev authservice-dev customerservice-dev forecastservice-dev orderservice-dev predictionservice-dev productservice-dev)
+
+          for i in "${!SERVICES[@]}"; do
+            SVC="${SERVICES[$i]}"
+            APP="${APP_NAMES[$i]}"
+            IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${SVC}:${{ github.sha }}"
+
+            echo ">>> Deploying ${APP} with image ${IMAGE}..."
+            az containerapp update \
+              --name "$APP" \
+              --resource-group erp-rg \
+              --image "$IMAGE"
+          done
+
+      - name: Smoke test — AuthService health check
+        run: |
+          echo "Waiting 30s for new revision to become active..."
+          sleep 30
           curl -fsS "${{ secrets.AUTH_SERVICE_URL }}/health"
           curl -fsS "${{ secrets.AUTH_SERVICE_URL }}/db-check"
