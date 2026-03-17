@@ -136,7 +136,7 @@ Invoke-NativeCommand -FilePath "docker" -ArgumentList @(
 
 $containerWorkDir = "/tmp/local-db-setup-$([Guid]::NewGuid().ToString('N'))"
 $containerSchemaParent = "$containerWorkDir/schemas/$schemaName"
-$containerCommand = "cd '$containerWorkDir' && bash ./apply_sqlserver_migrations.sh $normalizedMigrationsPath"
+$containerCommand = "cd '$containerWorkDir' && sed -i 's/\r$//' ./apply_sqlserver_migrations.sh && bash ./apply_sqlserver_migrations.sh $normalizedMigrationsPath"
 
 Write-Step "Copying migration runner and '$schemaName' migrations into the container"
 Invoke-NativeCommand -FilePath "docker" -ArgumentList @(
