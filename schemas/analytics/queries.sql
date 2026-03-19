@@ -182,4 +182,3 @@ FROM dbo.orders
 UNION ALL
 SELECT 'Products', COUNT(*), SUM(CASE WHEN name IS NULL THEN 1 ELSE 0 END)
 FROM dbo.products;
-

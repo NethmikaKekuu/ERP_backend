@@ -2,7 +2,7 @@
 
 This is the recommended local database flow for `InsightERP`.
 
-It uses the repo's Dockerized SQL Server instance, creates `insighterp_db` if needed, and applies the `auth` schema migrations without requiring `sqlcmd` or `bash` on your Windows machine.
+It uses the repo's Dockerized SQL Server instance, creates `insighterp_db` if needed, and applies all discovered `schemas/*/migrations` folders in dependency order without requiring `sqlcmd` or `bash` on your Windows machine.
 
 ## Prerequisite
 
@@ -21,7 +21,8 @@ The script is idempotent:
 - it starts `erp-sqlserver-local` if needed
 - it waits for SQL Server to be ready
 - it creates `insighterp_db` only if it does not already exist
-- it applies only migrations that are not yet recorded in `auth.schema_migrations`
+- it applies only migrations that are not yet recorded in each schema's `schema_migrations` table
+- it skips empty or whitespace-only `.sql` files with a reminder and does not record them
 - it does not wipe the Docker volume
 
 ## What The Script Does
@@ -31,11 +32,20 @@ The script is idempotent:
 1. Runs `docker compose up -d sqlserver`.
 2. Waits until `sqlcmd` inside the container can connect successfully.
 3. Ensures the local database `insighterp_db` exists.
-4. Copies `scripts/apply_sqlserver_migrations.sh` and `schemas/auth/migrations` into a temporary workspace inside the container.
-5. Executes the existing migration runner inside the container, targeting `schemas/auth/migrations`.
-6. Prints the local `AuthService` connection string when setup is complete.
+4. Discovers all `schemas/<name>/migrations` folders, then runs them in this default order: `auth`, `customer`, `product`, `order`, `prediction`, `analytics`.
+5. Copies `scripts/apply_sqlserver_migrations.sh` and the repo `schemas/` folder into a temporary workspace inside the container.
+6. Executes the existing migration runner once per migrations folder.
+7. Prints a migration summary and the local `AuthService` connection string when setup is complete.
 
 This keeps the local setup aligned with the same SQL Server migration flow used in CI/CD, while avoiding extra developer machine setup.
+
+## Current Schema Mapping
+
+The folder name and the SQL schema name usually match. The current exception is:
+
+- `schemas/prediction/migrations` is tracked in `ml.schema_migrations`, because the migration creates `ml.*` objects.
+
+The current `analytics` placeholder migration file is empty. The setup script will print a reminder for it, skip it, and continue without error.
 
 ## Service Configuration
 
@@ -70,6 +80,10 @@ Useful verification queries:
 
 ```sql
 SELECT * FROM auth.schema_migrations ORDER BY applied_at;
+SELECT * FROM customer.schema_migrations ORDER BY applied_at;
+SELECT * FROM product.schema_migrations ORDER BY applied_at;
+SELECT * FROM [order].schema_migrations ORDER BY applied_at;
+SELECT * FROM ml.schema_migrations ORDER BY applied_at;
 SELECT username, email, is_active FROM auth.users;
 SELECT role_name FROM auth.roles;
 ```
@@ -86,6 +100,10 @@ Once connected, you can run queries like:
 
 ```sql
 SELECT * FROM auth.schema_migrations ORDER BY applied_at;
+SELECT * FROM customer.schema_migrations ORDER BY applied_at;
+SELECT * FROM product.schema_migrations ORDER BY applied_at;
+SELECT * FROM [order].schema_migrations ORDER BY applied_at;
+SELECT * FROM ml.schema_migrations ORDER BY applied_at;
 SELECT username, email, is_active FROM auth.users;
 SELECT * FROM auth.roles;
 GO
@@ -102,6 +120,12 @@ You can run the setup script again at any time:
 ```
 
 Already applied migrations are skipped.
+
+If you want to run only a subset of migrations, you can pass one or more folders explicitly:
+
+```powershell
+.\scripts\setup-local-db.ps1 -MigrationsPath schemas/auth/migrations,schemas/product/migrations
+```
 
 ## Full Reset
 

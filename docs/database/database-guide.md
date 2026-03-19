@@ -8,13 +8,18 @@ For the local Docker developer workflow, use [local-database-setup.md](/mnt/c/Us
 
 InsightERP uses a single SQL Server database, `insighterp_db`, with per-service schemas.
 
-The active schema in the current implementation is:
+The actively used schema in the running code is:
 
 | Schema | Microservice | Current status |
 |---|---|---|
 | `auth` | `AuthService` | Active and used by the running code |
 
-Additional schema folders exist under `schemas/` for future services, but those are still being normalized to the SQL Server migration standard.
+Additional migration folders also exist under `schemas/` for `customer`, `product`, `order`, `prediction`, and `analytics`.
+
+Notes:
+
+- The `prediction` migration folder targets the `ml` SQL schema, so its tracking table is `ml.schema_migrations`.
+- The current `analytics` migration file is an empty placeholder. The runner skips empty files without recording them.
 
 Always reference tables with their schema name:
 
@@ -28,10 +33,11 @@ The Azure/CD migration runner is [apply_sqlserver_migrations.sh](/mnt/c/Users/Us
 
 It:
 
-1. Creates the target schema if it does not exist.
-2. Creates `[schema].schema_migrations` if it does not exist.
+1. Resolves the target SQL schema from the folder name, or from an explicit override when they differ.
+2. Creates the target schema and `[schema].schema_migrations` when it encounters the first non-empty migration file.
 3. Applies `.sql` files in the target migration folder.
 4. Skips files already recorded in the tracking table.
+5. Skips empty or whitespace-only `.sql` files without recording them.
 
 This makes the process idempotent. Existing data is preserved.
 
@@ -47,7 +53,7 @@ That guide covers:
 
 - starting the SQL Server container
 - creating `insighterp_db`
-- applying `auth` migrations
+- applying all local schema migrations in dependency order
 - connecting with Azure Data Studio
 - configuring `AuthService`
 
@@ -84,10 +90,13 @@ Then:
 2. Add a migration step in [cd-dev.yml](/mnt/c/Users/User/Desktop/coding/projects/2026/ERP_backend/.github/workflows/cd-dev.yml).
 3. Add the corresponding connection string secret and container app configuration.
 
+If the SQL schema name does not match the folder name, pass the real schema name as the second argument to [apply_sqlserver_migrations.sh](/mnt/c/Users/User/Desktop/coding/projects/2026/ERP_backend/scripts/apply_sqlserver_migrations.sh).
+
 ## Rules For Database Changes
 
 - Never edit an already-applied migration file.
 - Add a new numbered `.sql` file for every schema change.
+- Do not rely on empty placeholder migrations for real DDL. Leave them empty, remove them, or add a new numbered migration file when the schema is ready.
 - Keep table names schema-qualified.
 - Treat `auth` as the reference pattern for SQL Server migrations in this repo.
 
