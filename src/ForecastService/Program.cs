@@ -1,5 +1,5 @@
-using ForecastService.Services;
-using ForecastService.Repositories;
+using SalesForecasting.Services;
+using SalesForecasting.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +8,12 @@ builder.Services.AddScoped<ISalesRepository, SalesRepository>();
 builder.Services.AddScoped<IProductDataService, ProductDataService>();
 builder.Services.AddScoped<ITimeSeriesAnalyzer, TimeSeriesAnalyzer>();
 builder.Services.AddScoped<ISalesForecasterService, SalesForecasterService>();
+
+// ADD RETRAINING SERVICE
+builder.Services.AddScoped<IRetrainingService, RetrainingService>();
+
+// ADD BACKGROUND WORKER FOR AUTOMATIC RETRAINING
+builder.Services.AddHostedService<BackgroundRetrainingWorker>();
 
 // Add API documentation
 builder.Services.AddEndpointsApiExplorer();
@@ -68,6 +74,16 @@ try
 
     app.MapControllers();
     logger.LogInformation("Controllers mapped");
+
+    // Log retraining service initialization
+    logger.LogInformation("════════════════════════════════════════════════════════════════");
+    logger.LogInformation("Retraining Service Initialized");
+    logger.LogInformation("  Automatic Weekly Retraining: ENABLED");
+    logger.LogInformation("  Schedule: Every Sunday at 2:00 AM UTC");
+    logger.LogInformation("  Background Worker: Active (checks every 60 minutes)");
+    logger.LogInformation("  Manual Trigger Endpoint: POST /api/forecasting/retraining/trigger");
+    logger.LogInformation("  Status Endpoint: GET /api/forecasting/retraining/status");
+    logger.LogInformation("════════════════════════════════════════════════════════════════");
 
     logger.LogInformation("════════════════════════════════════════════════════════════════");
     logger.LogInformation("Application initialized successfully");
