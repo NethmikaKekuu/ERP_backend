@@ -41,11 +41,21 @@ jobs:
         run: |
           # Add mssql-tools to PATH
           export PATH="$PATH:/opt/mssql-tools18/bin"
-          bash ./scripts/apply_sqlserver_migrations.sh schemas/auth/migrations
-          bash ./scripts/apply_sqlserver_migrations.sh schemas/customer/migrations
-          bash ./scripts/apply_sqlserver_migrations.sh schemas/product/migrations
-          bash ./scripts/apply_sqlserver_migrations.sh schemas/order/migrations
-          bash ./scripts/apply_sqlserver_migrations.sh schemas/prediction/migrations ml
+
+          TARGETS=(
+            "schemas/auth/migrations:auth"
+            "schemas/customer/migrations:customer"
+            "schemas/product/migrations:product"
+            "schemas/order/migrations:order"
+            "schemas/prediction/migrations:ml"
+            "schemas/analytics/migrations:analytics"
+          )
+
+          for target in "${TARGETS[@]}"; do
+            IFS=':' read -r dir schema <<< "$target"
+            echo ">>> Applying ${dir} to schema ${schema}..."
+            bash ./scripts/apply_sqlserver_migrations.sh "$dir" "$schema"
+          done
 
       - name: Docker login to ACR
         run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
