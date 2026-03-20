@@ -303,3 +303,16 @@ docker-compose up -d
   - `testuser / Admin@123 / testuser@insighterp.local / USER`
   - `manager / Admin@123 / manager@insighterp.local / MANAGER`
 - This update supersedes the earlier local MySQL-based dev database note in this file.
+
+### 20) Dev Deployment Multi-Schema Azure SQL Migration Update (March 20, 2026)
+- Updated `.github/workflows/cd-dev.yml` so the `dev` deployment no longer migrates only `auth`.
+- The deployment workflow now applies all current schema migration folders before building and deploying services:
+  - `schemas/auth/migrations`
+  - `schemas/customer/migrations`
+  - `schemas/product/migrations`
+  - `schemas/order/migrations`
+  - `schemas/prediction/migrations` mapped to SQL schema `ml`
+  - `schemas/analytics/migrations`
+- This keeps the deployed Azure SQL database aligned with the same multi-schema migration order used in local setup.
+- The current student-project decision is to allow demo seed migrations in the `dev` deployment environment as well.
+- Updated `docs/database/database-guide.md` to reflect the new `dev` deployment migration flow.
