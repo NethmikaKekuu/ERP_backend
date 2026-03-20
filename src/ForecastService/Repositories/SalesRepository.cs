@@ -1,13 +1,13 @@
 using Microsoft.Data.SqlClient;
-using ForecastService.Models;
+using SalesForecasting.Models;
 
-namespace ForecastService.Repositories
+namespace SalesForecasting.Repositories
 {
     public class SalesRepository : ISalesRepository
     {
         private readonly IConfiguration _config;
         private readonly ILogger<SalesRepository> _logger;
-        private const string ConnectionName = "ChurnDb";
+        private const string ConnectionName = "insighterp_db";  // ← CHANGED FROM "ChurnDb"
 
         public SalesRepository(IConfiguration config, ILogger<SalesRepository> logger)
         {
