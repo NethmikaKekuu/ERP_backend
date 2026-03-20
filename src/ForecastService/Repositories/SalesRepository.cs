@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
-using SalesForecasting.Models;
+using ForecastService.Models;
 
-namespace SalesForecasting.Repositories
+namespace ForecastService.Repositories
 {
     public class SalesRepository : ISalesRepository
     {
