@@ -75,7 +75,7 @@ Current seed migration files:
 
 ## Azure CI/CD
 
-On pushes to `dev`, the CD workflow applies auth migrations before deploying services.
+On pushes to `dev`, the CD workflow applies all current schema migrations before deploying services.
 
 Relevant files:
 
@@ -86,8 +86,16 @@ Current deploy flow:
 
 1. Install `mssql-tools18`.
 2. Read Azure SQL credentials from GitHub Secrets.
-3. Run the SQL Server migration script for `schemas/auth/migrations`.
+3. Run the SQL Server migration script for:
+   `schemas/auth/migrations`,
+   `schemas/customer/migrations`,
+   `schemas/product/migrations`,
+   `schemas/order/migrations`,
+   `schemas/prediction/migrations` as `ml`,
+   and `schemas/analytics/migrations`.
 4. Build and deploy the services to Azure Container Apps.
+
+For this student project, the current seed migrations are intentionally included in the `dev` deployment flow, so a fresh dev database can be provisioned with demo users and sample business data.
 
 ## Adding a New Schema
 
@@ -103,7 +111,7 @@ schemas/
 Then:
 
 1. Write the migration in T-SQL for SQL Server/Azure SQL.
-2. Add a migration step in [cd-dev.yml](/mnt/c/Users/User/Desktop/coding/projects/2026/ERP_backend/.github/workflows/cd-dev.yml).
+2. Add the new schema folder to the migration target list in [cd-dev.yml](/mnt/c/Users/User/Desktop/coding/projects/2026/ERP_backend/.github/workflows/cd-dev.yml).
 3. Add the corresponding connection string secret and container app configuration.
 
 If the SQL schema name does not match the folder name, pass the real schema name as the second argument to [apply_sqlserver_migrations.sh](/mnt/c/Users/User/Desktop/coding/projects/2026/ERP_backend/scripts/apply_sqlserver_migrations.sh).
