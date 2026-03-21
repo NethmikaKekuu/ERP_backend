@@ -2,6 +2,10 @@ using System;
 
 namespace ProductService.DTOs
 {
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+>>>>>>> a62bde7 (IMS-17: implement core product management logic and DTOs)
     /// <summary>
     /// Stock information for a single product — used by the "view current stock" endpoint.
     /// </summary>
@@ -30,5 +34,20 @@ namespace ProductService.DTOs
 
         /// <summary>True when QuantityAvailable is at or below the LowStockThreshold.</summary>
         public bool IsLowStock { get; set; }
+<<<<<<< HEAD
+=======
+=======
+    public class StockResponseDto
+    {
+        public Guid ProductId { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public int QuantityAvailable { get; set; }
+        public int QuantityReserved { get; set; }
+        public int LowStockThreshold { get; set; }
+        public bool IsLowStock { get; set; }
+        public int TotalStock => QuantityAvailable + QuantityReserved;
+>>>>>>> Stashed changes
+>>>>>>> a62bde7 (IMS-17: implement core product management logic and DTOs)
     }
 }

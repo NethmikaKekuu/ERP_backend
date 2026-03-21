@@ -7,6 +7,7 @@ using ProductService.Data;
 using ProductService.DTOs;
 using ProductService.Interfaces;
 using ProductService.Models;
+using ProductService.Common;
 
 namespace ProductService.Services
 {
@@ -24,12 +25,15 @@ namespace ProductService.Services
         // ────────────────────────────────────────────────────────────────────
 
         public async Task<PaginatedResponse<ProductResponseDto>> GetProductsAsync(
-            int pageNumber, int pageSize, string? categoryName, string? name)
+            Guid? userId, int pageNumber, int pageSize, string? categoryName, string? name)
         {
             var query = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Inventory)
                 .AsQueryable();
+
+            if (userId.HasValue)
+                query = query.Where(p => p.CreatedByUserId == userId.Value);
 
             if (!string.IsNullOrWhiteSpace(categoryName))
                 query = query.Where(p => p.Category != null && p.Category.Name.ToLower() == categoryName.ToLower());
@@ -55,12 +59,17 @@ namespace ProductService.Services
             };
         }
 
-        public async Task<ProductResponseDto?> GetProductByIdAsync(Guid id)
+        public async Task<ProductResponseDto?> GetProductByIdAsync(Guid? userId, Guid id)
         {
-            var p = await _context.Products
+            var query = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Inventory)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .AsQueryable();
+
+            if (userId.HasValue)
+                query = query.Where(p => p.CreatedByUserId == userId.Value);
+
+            var p = await query.FirstOrDefaultAsync(p => p.Id == id);
 
             return p == null ? null : MapToProductResponse(p);
         }
@@ -69,10 +78,22 @@ namespace ProductService.Services
         //  CREATE
         // ────────────────────────────────────────────────────────────────────
 
+<<<<<<< Updated upstream
         public async Task<ProductResponseDto> CreateProductAsync(CreateProductDto dto, Guid createdByUserId)
+=======
+        public async Task<ProductResponseDto> CreateProductAsync(Guid? userId, CreateProductDto dto)
+>>>>>>> Stashed changes
         {
+            // First check if the SKU already exists
+            var existingProduct = await _context.Products.FirstOrDefaultAsync(p => p.Sku == dto.Sku);
+            if (existingProduct != null)
+            {
+                throw new InvalidOperationException($"A product with SKU '{dto.Sku}' already exists.");
+            }
+
             var product = new Product
             {
+<<<<<<< Updated upstream
                 Sku             = dto.Sku,
                 Name            = dto.Name,
                 Description     = dto.Description,
@@ -83,6 +104,17 @@ namespace ProductService.Services
                 UpdatedAt       = DateTime.UtcNow,
                 CreatedByUserId = createdByUserId,
                 QuantityAvailable = dto.InitialStock
+=======
+                Sku         = dto.Sku,
+                Name        = dto.Name,
+                Description = dto.Description,
+                CategoryId  = dto.CategoryId,
+                Price       = dto.Price,
+                IsActive    = dto.IsActive,
+                CreatedAt   = DateTime.UtcNow,
+                UpdatedAt   = DateTime.UtcNow,
+                CreatedByUserId = userId
+>>>>>>> Stashed changes
             };
 
             _context.Products.Add(product);
@@ -113,12 +145,23 @@ namespace ProductService.Services
         //  UPDATE
         // ────────────────────────────────────────────────────────────────────
 
-        public async Task<ProductResponseDto?> UpdateProductAsync(Guid id, UpdateProductDto dto)
+        public async Task<ProductResponseDto?> UpdateProductAsync(Guid? userId, Guid id, UpdateProductDto dto)
         {
-            var p = await _context.Products
+            var existingProductWithSameSku = await _context.Products.FirstOrDefaultAsync(p => p.Sku == dto.Sku && p.Id != id);
+            if (existingProductWithSameSku != null)
+            {
+                throw new InvalidOperationException($"A product with SKU '{dto.Sku}' already exists.");
+            }
+
+            var query = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Inventory)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .AsQueryable();
+
+            if (userId.HasValue)
+                query = query.Where(p => p.CreatedByUserId == userId.Value);
+
+            var p = await query.FirstOrDefaultAsync(p => p.Id == id);
 
             if (p == null) return null;
 
@@ -145,6 +188,7 @@ namespace ProductService.Services
                     QuantityAvailable = dto.QuantityAvailable,
                     LowStockThreshold = dto.LowStockThreshold
                 };
+                _context.Inventory.Add(p.Inventory);
             }
 
             // Raise low-stock alert if needed
@@ -163,9 +207,13 @@ namespace ProductService.Services
         //  DELETE
         // ────────────────────────────────────────────────────────────────────
 
-        public async Task<bool> DeleteProductAsync(Guid id)
+        public async Task<bool> DeleteProductAsync(Guid? userId, Guid id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var query = _context.Products.AsQueryable();
+            if (userId.HasValue)
+                query = query.Where(p => p.CreatedByUserId == userId.Value);
+
+            var product = await query.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null) return false;
 
             _context.Products.Remove(product);
@@ -177,11 +225,16 @@ namespace ProductService.Services
         //  INVENTORY / STOCK
         // ────────────────────────────────────────────────────────────────────
 
-        public async Task<IEnumerable<StockResponseDto>> GetStockAsync()
+        public async Task<IEnumerable<StockResponseDto>> GetStockAsync(Guid? userId)
         {
-            var stocks = await _context.Products
+            var query = _context.Products
                 .Include(p => p.Inventory)
-                .Where(p => p.IsActive)
+                .Where(p => p.IsActive);
+
+            if (userId.HasValue)
+                query = query.Where(p => p.CreatedByUserId == userId.Value);
+
+            var stocks = await query
                 .OrderBy(p => p.Name)
                 .Select(p => MapToStockResponse(p))
                 .ToListAsync();
@@ -189,18 +242,31 @@ namespace ProductService.Services
             return stocks;
         }
 
-        public async Task<StockResponseDto?> GetStockByProductIdAsync(Guid productId)
+        public async Task<StockResponseDto?> GetStockByProductIdAsync(Guid? userId, Guid productId)
         {
-            var p = await _context.Products
+            var query = _context.Products
                 .Include(p => p.Inventory)
-                .FirstOrDefaultAsync(p => p.Id == productId);
+                .AsQueryable();
+
+            if (userId.HasValue)
+                query = query.Where(p => p.CreatedByUserId == userId.Value);
+
+            var p = await query.FirstOrDefaultAsync(p => p.Id == productId);
 
             return p == null ? null : MapToStockResponse(p);
         }
 
-        public async Task<(bool Success, string Message)> DeductStockAsync(DeductStockDto dto)
+        public async Task<(bool Success, string Message)> DeductStockAsync(Guid? userId, DeductStockDto dto)
         {
-            // Load product with inventory in a single round-trip
+            var query = _context.Products.AsQueryable();
+            if (userId.HasValue)
+                query = query.Where(p => p.CreatedByUserId == userId.Value);
+
+            var product = await query.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+            if (product == null)
+                return (false, $"Product {dto.ProductId} not found or you do not have permission.");
+
+            // Load inventory
             var inventory = await _context.Inventory
                 .FirstOrDefaultAsync(i => i.ProductId == dto.ProductId);
 

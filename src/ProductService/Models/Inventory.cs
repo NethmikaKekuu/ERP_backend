@@ -9,7 +9,14 @@ namespace ProductService.Models
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
 
+<<<<<<< HEAD
         [Required]
+=======
+<<<<<<< Updated upstream
+        [Required]
+=======
+>>>>>>> Stashed changes
+>>>>>>> a62bde7 (IMS-17: implement core product management logic and DTOs)
         public Guid ProductId { get; set; }
 
         public int QuantityAvailable { get; set; } = 0;
