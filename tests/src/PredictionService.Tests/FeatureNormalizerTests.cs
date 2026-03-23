@@ -316,7 +316,7 @@ public class FeatureNormalizerTests
             Recency = recency,
             Frequency = frequency,
             MonetaryValue = monetaryValue,
-            AvgOrderValue = monetaryValue / frequency > 0 ? (decimal)frequency : 100,
+            AvgOrderValue = frequency > 0 ? monetaryValue / frequency : 100,
             TenureDays = 730,
             ProductDiversity = 8,
             CategoryDiversity = 5,
