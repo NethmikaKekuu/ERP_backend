@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../PredictionService/PredictionService.csproj" />
+    <ProjectReference Include="..\..\..\src\PredictionService\PredictionService.csproj" />
   </ItemGroup>
 
 </Project>
