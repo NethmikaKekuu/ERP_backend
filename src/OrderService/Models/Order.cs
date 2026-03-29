@@ -1,30 +1,36 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-[Table("orders")]
-public class Order
+namespace OrderService.Models
 {
-    [Key]
-    public Guid Id { get; set; }
+    public class Order
+    {
+        public int Id { get; set; }
 
-    [Column("customer_id")]
-    public Guid CustomerId { get; set; }
+        // External order reference from e-commerce app
+        [Required]
+        [MaxLength(100)]
+        public string ExternalOrderId { get; set; } = string.Empty;
 
-    public string Status { get; set; } = "PENDING";
+        [Required]
+        [MaxLength(100)]
+        public string CustomerId { get; set; } = string.Empty;
 
-    [Column("total_amount")]
-    public decimal TotalAmount { get; set; }
+        // Simple total amount for beginner-friendly version
+        [Range(0, double.MaxValue)]
+        public decimal TotalAmount { get; set; }
 
-    public string Currency { get; set; } = "USD";
+        [Required]
+        public OrderStatus Status { get; set; } = OrderStatus.Created;
 
-    public string? Notes { get; set; }
+        // Used only when order is cancelled
+        [MaxLength(500)]
+        public string? CancellationReason { get; set; }
 
-    [Column("created_at")]
-    public DateTime CreatedAt { get; set; }
-
-    [Column("updated_at")]
-    public DateTime UpdatedAt { get; set; }
-
-    // 🔗 Relationship
-    public List<OrderItem> Items { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? ConfirmedAt { get; set; }
+        public DateTime? ProcessedAt { get; set; }
+        public DateTime? ShippedAt { get; set; }
+        public DateTime? DeliveredAt { get; set; }
+        public DateTime? CancelledAt { get; set; }
+    }
 }
