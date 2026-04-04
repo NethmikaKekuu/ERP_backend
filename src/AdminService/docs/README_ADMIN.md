@@ -34,3 +34,5 @@ http://localhost:5011/swagger
 - `GET /health`
 
 All non-health endpoints require an authenticated admin token. The authorization layer accepts both legacy `ADMIN` and canonical `Admin` role claims.
+
+`AdminService` uses the same shared `ConnectionStrings:AuthDb` database connection contract as `AuthService`.

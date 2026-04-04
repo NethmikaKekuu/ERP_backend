@@ -14,10 +14,10 @@ public sealed class AdminDashboardRepository : IAdminDashboardRepository
 
     private SqlConnection CreateConnection()
     {
-        var connectionString = _configuration.GetConnectionString("AdminDb");
+        var connectionString = _configuration.GetConnectionString("AuthDb");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new InvalidOperationException("ConnectionStrings:AdminDb is not configured.");
+            throw new InvalidOperationException("ConnectionStrings:AuthDb is not configured.");
         }
 
         return new SqlConnection(connectionString);
