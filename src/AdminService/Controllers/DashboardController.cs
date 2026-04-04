@@ -19,9 +19,9 @@ public class DashboardController : ControllerBase
 
     [HttpGet("overview")]
     [ProducesResponseType(typeof(AdminDashboardOverviewResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetOverview()
+    public async Task<IActionResult> GetOverview(CancellationToken cancellationToken = default)
     {
-        var response = await _dashboardService.GetOverviewAsync(HttpContext.RequestAborted);
+        var response = await _dashboardService.GetOverviewAsync(cancellationToken);
         return Ok(response);
     }
 }
