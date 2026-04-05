@@ -5,8 +5,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "authservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "authservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/auth/{everything}",
@@ -23,8 +23,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "authservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "authservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/auth/health",
@@ -38,8 +38,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "customerservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "customerservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/customers/{everything}",
@@ -59,8 +59,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "customerservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "customerservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/customer/health",
@@ -74,8 +74,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "orderservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "orderservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/orders/{everything}",
@@ -95,8 +95,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "orderservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "orderservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/order/health",
@@ -110,8 +110,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "productservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "productservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/products/{everything}",
@@ -131,8 +131,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "productservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "productservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/product/health",
@@ -146,8 +146,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "forecastservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "forecastservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/ml/forecast/{everything}",
@@ -165,8 +165,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "forecastservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "forecastservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/forecast/health",
@@ -180,8 +180,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "predictionservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "predictionservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/ml/churn/{everything}",
@@ -199,8 +199,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "predictionservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "predictionservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/ml/segmentation/{everything}",
@@ -218,8 +218,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "predictionservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "predictionservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/prediction/health",
@@ -233,8 +233,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "analyticsservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "analyticsservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/api/dashboard/{everything}",
@@ -251,8 +251,8 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "analyticsservice-prod.internal.ambitiouscoast-02234f11.eastasia.azurecontainerapps.io",
-                    "Port": 8080
+                    "Host": "analyticsservice-prod",
+                    "Port": 80
                 }
             ],
             "UpstreamPathTemplate": "/analytics/health",
