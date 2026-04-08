@@ -7,12 +7,11 @@ using OrderService.Data;
 using OrderService.Messaging;
 using OrderService.Repositories;
 using OrderService.Services;
+using System.Security.Claims;
+using System.Text.Json.Serialization;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add controllers
-builder.Services.AddControllers();
 
 // Add logging
 builder.Logging.ClearProviders();
@@ -33,9 +32,11 @@ builder.Services.AddScoped<IOrderService, OrderService.Services.OrderService>();
 builder.Services.AddScoped<IKafkaProducer, KafkaProducer>();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new Exception("JWT Key is missing.");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new Exception("JWT Issuer is missing.");
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? throw new Exception("JWT Audience is missing.");
+var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET")
+    ?? builder.Configuration["JwtSettings:SecretKey"]
+    ?? throw new Exception("JwtSettings:SecretKey is missing.");
+var jwtIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "InsightERP";
+var jwtAudience = builder.Configuration["JwtSettings:Audience"] ?? "InsightERP-Users";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -55,11 +56,32 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        RoleClaimType = "role"
+        NameClaimType = ClaimTypes.Name,
+        RoleClaimType = ClaimTypes.Role
     };
 });
 
 builder.Services.AddAuthorization();
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(",") 
+            ?? new[] { "http://localhost:3000", "http://localhost:5173" };
+
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 // Swagger + JWT support
 builder.Services.AddEndpointsApiExplorer();
@@ -106,6 +128,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// CORS middleware - must be before Authentication
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
