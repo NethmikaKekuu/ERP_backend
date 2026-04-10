@@ -34,21 +34,6 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/swagger/index.html",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "authservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/auth/swagger",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -72,21 +57,6 @@
         }
       ],
       "UpstreamPathTemplate": "/customer/health",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/swagger/index.html",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "customerservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/customer/swagger",
       "UpstreamHttpMethod": [
         "GET",
         "HEAD"
@@ -128,7 +98,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/health",
+      "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -137,21 +107,6 @@
         }
       ],
       "UpstreamPathTemplate": "/order/health",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/swagger/index.html",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "orderservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/order/swagger",
       "UpstreamHttpMethod": [
         "GET",
         "HEAD"
@@ -202,21 +157,6 @@
         }
       ],
       "UpstreamPathTemplate": "/product/health",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/swagger/index.html",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "productservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/product/swagger",
       "UpstreamHttpMethod": [
         "GET",
         "HEAD"
@@ -308,22 +248,7 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "forecastservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/forecast/swagger",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -390,21 +315,6 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/swagger/index.html",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "predictionservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/prediction/swagger",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -428,21 +338,6 @@
         }
       ],
       "UpstreamPathTemplate": "/analytics/health",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/swagger/index.html",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "analyticsservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/analytics/swagger",
       "UpstreamHttpMethod": [
         "GET",
         "HEAD"
@@ -494,21 +389,6 @@
         }
       ],
       "UpstreamPathTemplate": "/admin/health",
-      "UpstreamHttpMethod": [
-        "GET",
-        "HEAD"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/swagger/index.html",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "adminservice",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/admin/swagger",
       "UpstreamHttpMethod": [
         "GET",
         "HEAD"
