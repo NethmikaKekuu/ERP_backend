@@ -10,8 +10,10 @@ $global:LASTEXITCODE = 0
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $dbSetupScript = Join-Path $PSScriptRoot "setup-local-db.ps1"
+$composeProjectName = "erp_backend"
+$composeProjectPattern = "^[0-9a-f]+_{0}-" -f [regex]::Escape($composeProjectName)
 $composeFileArgs = @("-f", "docker-compose.yml", "-f", "docker-compose.local.yml")
-$composePrefix = @("compose") + $composeFileArgs
+$composePrefix = @("compose", "-p", $composeProjectName) + $composeFileArgs
 $serviceDefinitions = @(
     [pscustomobject]@{ Name = "apigateway";       DisplayName = "ApiGateway";        Aliases = @("apigateway", "api-gateway", "gateway");          SwaggerPath = $null;                    HealthPath = "/health" },
     [pscustomobject]@{ Name = "authservice";      DisplayName = "AuthService";       Aliases = @("authservice", "auth-service", "auth");          SwaggerPath = "/auth/swagger";          HealthPath = "/auth/health" },
@@ -94,6 +96,38 @@ function Invoke-PowerShellScript {
 
     if ($process.ExitCode -ne 0) {
         throw $FailureMessage
+    }
+}
+
+function Get-RenamedComposeContainerNames {
+    $containerNames = & docker ps -a --format "{{.Names}}" 2>&1
+    if ($global:LASTEXITCODE -ne 0) {
+        throw "Failed to inspect Docker containers before startup."
+    }
+
+    $renamedContainers = New-Object System.Collections.Generic.List[string]
+    foreach ($containerName in $containerNames) {
+        $trimmedName = $containerName.ToString().Trim()
+        if (-not [string]::IsNullOrWhiteSpace($trimmedName) -and $trimmedName -match $composeProjectPattern) {
+            $renamedContainers.Add($trimmedName)
+        }
+    }
+
+    return @($renamedContainers)
+}
+
+function Remove-RenamedComposeContainers {
+    $renamedContainers = @(Get-RenamedComposeContainerNames)
+    if ($renamedContainers.Count -eq 0) {
+        return
+    }
+
+    Write-Step "Removing stale Docker containers left behind by interrupted recreates"
+    foreach ($containerName in $renamedContainers) {
+        Write-Host "  Removing $containerName" -ForegroundColor DarkGray
+        if ($PSCmdlet.ShouldProcess($containerName, "docker rm -f")) {
+            Invoke-RepoCommand -FilePath "docker" -ArgumentList @("rm", "-f", $containerName) -FailureMessage "Failed to remove stale Docker container '$containerName'."
+        }
     }
 }
 
@@ -194,8 +228,10 @@ else {
     Write-Host "  Reusing the existing sqlserver container and schema state." -ForegroundColor DarkGray
 }
 
+Remove-RenamedComposeContainers
+
 if ($selectedServices -contains "apigateway") {
-    $gatewayArgs = $composePrefix + @("up", "-d", "--build", "apigateway")
+    $gatewayArgs = $composePrefix + @("up", "-d", "--build", "--remove-orphans", "apigateway")
     Write-Step "Starting ApiGateway"
     if ($PSCmdlet.ShouldProcess(("docker " + ($gatewayArgs -join " ")), "Run compose")) {
         Invoke-RepoCommand -FilePath "docker" -ArgumentList $gatewayArgs -FailureMessage "Failed to start ApiGateway with docker compose."
@@ -203,7 +239,7 @@ if ($selectedServices -contains "apigateway") {
 }
 
 if ($servicesWithoutGateway.Count -gt 0) {
-    $serviceArgs = $composePrefix + @("up", "-d", "--build") + $servicesWithoutGateway
+    $serviceArgs = $composePrefix + @("up", "-d", "--build", "--remove-orphans") + $servicesWithoutGateway
     Write-Step "Starting selected microservices"
     if ($PSCmdlet.ShouldProcess(("docker " + ($serviceArgs -join " ")), "Run compose")) {
         Invoke-RepoCommand -FilePath "docker" -ArgumentList $serviceArgs -FailureMessage "Failed to start one or more selected microservices with docker compose."
