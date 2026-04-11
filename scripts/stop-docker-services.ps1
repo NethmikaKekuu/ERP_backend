@@ -51,8 +51,19 @@ function Invoke-RepoCommand {
 
     Push-Location $repoRoot
     try {
-        & $FilePath @ArgumentList
-        if ($global:LASTEXITCODE -ne 0) {
+        $previousErrorActionPreference = $ErrorActionPreference
+        $exitCode = 1
+
+        try {
+            $ErrorActionPreference = "Continue"
+            & $FilePath @ArgumentList
+            $exitCode = $global:LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
+
+        if ($exitCode -ne 0) {
             throw $FailureMessage
         }
     }
@@ -62,8 +73,19 @@ function Invoke-RepoCommand {
 }
 
 function Get-RenamedComposeContainerNames {
-    $containerNames = & docker ps -a --format "{{.Names}}" 2>&1
-    if ($global:LASTEXITCODE -ne 0) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $exitCode = 1
+
+    try {
+        $ErrorActionPreference = "Continue"
+        $containerNames = & docker ps -a --format "{{.Names}}" 2>$null
+        $exitCode = $global:LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    if ($exitCode -ne 0) {
         throw "Failed to inspect Docker containers during cleanup."
     }
 
