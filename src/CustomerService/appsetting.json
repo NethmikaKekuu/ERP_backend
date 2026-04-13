@@ -1,9 +1,21 @@
 {
-    "Logging": {
-        "LogLevel": {
-            "Default": "Information",
-            "Microsoft.AspNetCore": "Warning"
-        }
-    },
-    "AllowedHosts": "*"
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Port=3306;Database=customer_service_db;User=root;Password=yourpassword;"
+  },
+  "Jwt": {
+    "Key": "super-secret-key-change-this-123456",
+    "Issuer": "CustomerService",
+    "Audience": "CustomerPortalUsers"
+  },
+  "Services": {
+    "ProductService": "http://productservice:8080",
+    "OrderService": "http://orderservice:8080"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
 }
