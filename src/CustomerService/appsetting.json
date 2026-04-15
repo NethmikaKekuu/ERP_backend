@@ -17,7 +17,7 @@
   },
   "ServiceEndpoints": {
     "ProductService": "http://localhost:5004",
-    "OrderService": "http://localhost:5005"
+    "OrderService": "http://localhost:5003"
   },
   "Cors": {
     "FrontendUrl": "http://localhost:5173"
