@@ -1,7 +1,8 @@
+-- Migration 006: Seed 15 new products with inventory
 BEGIN TRANSACTION;
 BEGIN TRY
 
-    -- 1. Define the 15 new products in a CTE
+    -- 1. Define the 15 new products in a CTE and INSERT in same batch
     ;WITH new_product_seed AS (
         SELECT *
         FROM (VALUES
@@ -31,25 +32,45 @@ BEGIN TRY
             (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440025'), 5, N'PAD-001', N'Extended Mouse Pad', N'Extra large desk mat', 19.99, 300)
         ) AS v(id, category_id, sku, name, description, price, stock)
     )
-
-    -- 2. Insert into products table
     INSERT INTO dbo.products (id, category_id, sku, name, description, price, is_active, quantity_available, created_at, updated_at)
     SELECT
         s.id, s.category_id, s.sku, s.name, s.description, s.price, 1, s.stock, GETUTCDATE(), GETUTCDATE()
     FROM new_product_seed s
     WHERE NOT EXISTS (SELECT 1 FROM dbo.products p WHERE p.sku = s.sku OR p.id = s.id);
 
-    -- 3. Backfill inventory table (required by your schema in Migration 003)
+    -- 2. Backfill inventory table - use separate CTE for this batch
+    ;WITH inventory_seed AS (
+        SELECT *
+        FROM (VALUES
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440011'), 50),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440012'), 30),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440013'), 25),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440014'), 100),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440015'), 40),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440016'), 15),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440017'), 200),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440018'), 60),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440019'), 150),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440020'), 80),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440021'), 12),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440022'), 10),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440023'), 45),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440024'), 120),
+            (CONVERT(UNIQUEIDENTIFIER, '650e8400-e29b-41d4-a716-446655440025'), 300)
+        ) AS v(product_id, stock)
+    )
     INSERT INTO dbo.inventory (product_id, quantity_available, quantity_reserved, low_stock_threshold, created_at, updated_at)
     SELECT
-        s.id, s.stock, 0, 10, GETUTCDATE(), GETUTCDATE()
-    FROM new_product_seed s
-    WHERE NOT EXISTS (SELECT 1 FROM dbo.inventory i WHERE i.product_id = s.id);
+        s.product_id, s.stock, 0, 10, GETUTCDATE(), GETUTCDATE()
+    FROM inventory_seed s
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.inventory i WHERE i.product_id = s.product_id);
 
     COMMIT TRANSACTION;
-    PRINT '15 new products and their inventory records added successfully.';
+    PRINT '✓ 15 new products and their inventory records added successfully.';
+
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+    PRINT 'ERROR: ' + ERROR_MESSAGE();
     THROW;
 END CATCH
