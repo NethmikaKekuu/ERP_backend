@@ -214,6 +214,25 @@
         }
       },
       {
+        "DownstreamPathTemplate": "/api/ml/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "localhost",
+            "Port": 5006
+          }
+        ],
+        "UpstreamPathTemplate": "/api/ml/{everything}",
+        "UpstreamHttpMethod": [
+          "GET",
+          "POST",
+          "OPTIONS"
+        ],
+        "AuthenticationOptions": {
+          "AuthenticationProviderKey": "Bearer"
+        }
+      },
+      {
         "DownstreamPathTemplate": "/health",
         "DownstreamScheme": "http",
         "DownstreamHostAndPorts": [

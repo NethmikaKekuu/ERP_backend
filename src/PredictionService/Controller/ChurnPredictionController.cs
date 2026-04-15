@@ -6,7 +6,7 @@ using PredictionService.Repositories;
 namespace PredictionService.Controllers;
 
 [ApiController]
-[Route("api/ml/[controller]")]
+[Route("api/ml")]
 public class PredictionsController : ControllerBase
 {
     private readonly IChurnPredictionService _churnService;
@@ -50,7 +50,7 @@ public class PredictionsController : ControllerBase
     /// <summary>
     /// Get recent predictions (last 7 days)
     /// </summary>
-    [HttpGet("recent")]
+    [HttpGet("churn/recent")]
     public async Task<IActionResult> GetRecentPredictions([FromQuery] int days = 7)
     {
         try
@@ -68,7 +68,7 @@ public class PredictionsController : ControllerBase
     /// <summary>
     /// Get analytics for a risk level
     /// </summary>
-    [HttpGet("analytics/churn/{level}")]
+    [HttpGet("churn/analytics/churn/{level}")]
     public async Task<IActionResult> GetChurnAnalytics(string level)
     {
         try

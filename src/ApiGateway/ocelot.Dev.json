@@ -214,6 +214,25 @@
             }
         },
         {
+            "DownstreamPathTemplate": "/api/ml/{everything}",
+            "DownstreamScheme": "https",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "predictionservice-dev.internal.victoriouscliff-19d215bb.southeastasia.azurecontainerapps.io",
+                    "Port": 443
+                }
+            ],
+            "UpstreamPathTemplate": "/api/ml/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "OPTIONS"
+            ],
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "Bearer"
+            }
+        },
+        {
             "DownstreamPathTemplate": "/health",
             "DownstreamScheme": "https",
             "DownstreamHostAndPorts": [

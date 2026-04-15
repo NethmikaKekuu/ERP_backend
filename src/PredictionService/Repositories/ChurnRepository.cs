@@ -81,13 +81,13 @@ public class ChurnRepository : IChurnRepository
                 TenureDays = reader.GetInt32(5),
                 ProductDiversity = reader.GetInt32(6),
                 CategoryDiversity = reader.GetInt32(7),
-                AvgProductsPerOrder = reader.GetDecimal(8),
+                AvgProductsPerOrder = Convert.ToDecimal(reader[8]),   // FLOAT in view
                 ReturnCount = reader.GetInt32(9),
-                ReturnRate = reader.GetDecimal(10),
+                ReturnRate = Convert.ToDecimal(reader[10]),            // FLOAT in view
                 TotalRefunded = reader.GetDecimal(11),
                 CompletedOrders = reader.GetInt32(12),
                 CancelledOrders = reader.GetInt32(13),
-                CancellationRate = reader.GetDecimal(14),
+                CancellationRate = Convert.ToDecimal(reader[14]),      // FLOAT in view
                 AccountAgeDays = reader.GetInt32(15),
                 DaysSinceActivity = reader.GetInt32(16),
                 InactiveFlag = reader.GetInt32(17)
