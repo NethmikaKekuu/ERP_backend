@@ -114,6 +114,12 @@ app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("v1/swagger.json", "CustomerService API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.MapControllers();
 
