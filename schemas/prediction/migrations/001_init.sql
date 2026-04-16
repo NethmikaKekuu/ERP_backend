@@ -22,7 +22,7 @@ BEGIN
         predicted_at      DATETIME2         NOT NULL,
         created_at        DATETIME2         NOT NULL DEFAULT GETUTCDATE(),
         CONSTRAINT chk_probability  CHECK (churn_probability >= 0 AND churn_probability <= 1),
-        CONSTRAINT chk_risk_label   CHECK (churn_risk_label IN ('LOW', 'MEDIUM', 'HIGH')),
+        CONSTRAINT chk_risk_label CHECK (churn_risk_label IN ('LOW', 'MEDIUM', 'HIGH', 'UNKNOWN', 'ERROR')),
         CONSTRAINT fk_predictions_customer
             FOREIGN KEY (customer_id) REFERENCES dbo.customers(id) ON DELETE CASCADE
     );

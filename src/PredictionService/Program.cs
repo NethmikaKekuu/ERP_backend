@@ -11,7 +11,10 @@ builder.Services.AddScoped<IChurnPredictionService, ChurnPredictionService>();
 builder.Services.AddScoped<ITrainingDataRepository, TrainingDataRepository>();
 builder.Services.AddScoped<IModelRetrainingService, ModelRetrainingService>();
 builder.Services.AddHostedService<WeeklyModelRetrainingBackgroundService>();
+
+// Singleton so the trained model stays in memory across all requests
 builder.Services.AddSingleton<ChurnModelManager>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -51,7 +54,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure pipeline
-app.UseCors(); // This uses the default policy
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
@@ -66,7 +69,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 app.MapControllers();
 
-// Test endpoint
 app.MapGet("/", () => "Churn Prediction API is running!");
 
 app.Run();
