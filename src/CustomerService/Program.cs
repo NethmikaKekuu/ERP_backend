@@ -15,12 +15,20 @@ builder.Services.AddControllers();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
+// ✅ FIX: Instead of ServerVersion.AutoDetect (which connects immediately and crashes
+//         if MySQL isn't up), we specify the MySQL version manually.
+//         MySqlServerVersion(new Version(8, 0, 36)) means MySQL 8.0.36 —
+//         adjust the numbers to match your actual MySQL version if needed.
+//         Common versions: 8.0.x, 5.7.x. If you're using MariaDB use MariaDbServerVersion instead.
 builder.Services.AddDbContext<CustomerDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? throw new Exception("DefaultConnection is missing.");
+        ?? throw new Exception("DefaultConnection is missing from appsettings.json.");
 
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+    options.UseMySql(
+        connectionString,
+        new MySqlServerVersion(new Version(8, 0, 36)) // ✅ Fixed version — no live connection needed at startup
+    );
 });
 
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -104,29 +112,36 @@ var app = builder.Build();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseCors("FrontendPolicy");
-
-app.UseAuthentication();
-app.UseAuthorization();
+// ✅ FIX: Swagger was registered twice in your original code.
+//         Keep it only here, outside the if-block, so it always works.
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("v1/swagger.json", "CustomerService API v1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CustomerService API v1"); // ✅ Fixed path (was "v1/swagger.json")
     c.RoutePrefix = "swagger";
 });
 
+app.UseCors("FrontendPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
+// ✅ FIX: Wrap EnsureCreated in a try/catch so a DB connection failure at startup
+//         gives you a clear warning instead of crashing the whole app.
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
-    dbContext.Database.EnsureCreated();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
+        dbContext.Database.EnsureCreated();
+        logger.LogInformation("✅ Database connection successful and schema ensured.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning("⚠️ Could not connect to the database at startup: {Message}", ex.Message);
+        logger.LogWarning("The app will still start. Fix your DB connection and restart.");
+    }
 }
 
 app.Run();
