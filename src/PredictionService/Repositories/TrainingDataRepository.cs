@@ -41,8 +41,8 @@ public class TrainingDataRepository : ITrainingDataRepository
                     ISNULL(f.customer_tenure_days, 0) AS tenure_days,
                     ISNULL(f.unique_products_purchased, 0) AS product_diversity,
                     ISNULL(f.total_returns, 0) AS return_count,
-                    ISNULL(f.return_rate, 0) AS return_rate,
-                    ISNULL(f.cancellation_rate, 0) AS cancellation_rate,
+                    CAST(ISNULL(f.return_rate, 0) AS FLOAT) AS return_rate,
+                    CAST(ISNULL(f.cancellation_rate, 0) AS FLOAT) AS cancellation_rate,
                     ISNULL(f.completed_orders, 0) AS completed_orders,
                     ISNULL(f.cancelled_orders, 0) AS cancelled_orders,
                     ISNULL(f.inactive_flag, 0) AS inactive_flag,
@@ -90,16 +90,14 @@ public class TrainingDataRepository : ITrainingDataRepository
                 recordCount++;
 
                 if (recordCount % 1000 == 0)
-                {
                     _logger.LogInformation("Fetched {Count} records so far...", recordCount);
-                }
             }
 
             _logger.LogInformation("Completed fetching ALL {Count} training records", trainingData.Count);
-            
+
             int churnedCount = trainingData.Count(x => x.Label);
             int activeCount = trainingData.Count - churnedCount;
-            _logger.LogInformation("Churn distribution - Churned: {Churned}, Active: {Active}", 
+            _logger.LogInformation("Churn distribution - Churned: {Churned}, Active: {Active}",
                 churnedCount, activeCount);
 
             return trainingData;
@@ -111,6 +109,9 @@ public class TrainingDataRepository : ITrainingDataRepository
         }
     }
 
+    /// <summary>
+    /// Save or update training history (UPSERT to avoid duplicate PK on second save)
+    /// </summary>
     public async Task SaveTrainingHistoryAsync(TrainingHistory history)
     {
         try
@@ -118,12 +119,23 @@ public class TrainingDataRepository : ITrainingDataRepository
             var connectionString = _config.GetConnectionString(ConnectionName);
 
             const string query = @"
-                INSERT INTO ml.training_history
-                (id, model_version_id, training_start_time, training_end_time, training_status, 
-                 total_records_used, churned_count, non_churned_count, error_message, triggered_by, created_at)
-                VALUES
-                (@id, @modelVersionId, @startTime, @endTime, @status, @recordCount, 
-                 @churnedCount, @nonChurnedCount, @errorMessage, @triggeredBy, GETUTCDATE())";
+                IF EXISTS (SELECT 1 FROM ml.training_history WHERE id = @id)
+                    UPDATE ml.training_history SET
+                        model_version_id   = @modelVersionId,
+                        training_end_time  = @endTime,
+                        training_status    = @status,
+                        total_records_used = @recordCount,
+                        churned_count      = @churnedCount,
+                        non_churned_count  = @nonChurnedCount,
+                        error_message      = @errorMessage
+                    WHERE id = @id
+                ELSE
+                    INSERT INTO ml.training_history
+                    (id, model_version_id, training_start_time, training_end_time, training_status, 
+                     total_records_used, churned_count, non_churned_count, error_message, triggered_by, created_at)
+                    VALUES
+                    (@id, @modelVersionId, @startTime, @endTime, @status, @recordCount, 
+                     @churnedCount, @nonChurnedCount, @errorMessage, @triggeredBy, GETUTCDATE())";
 
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
@@ -358,8 +370,22 @@ public class TrainingDataRepository : ITrainingDataRepository
         }
     }
 
+    /// <summary>
+    /// Safely reads any numeric SQL column as float regardless of underlying type
+    /// Handles INT, BIGINT, FLOAT, DECIMAL, REAL from SQL Server
+    /// </summary>
     private static float SafeGetFloat(SqlDataReader reader, int ordinal)
     {
-        return reader.IsDBNull(ordinal) ? 0f : (float)reader.GetDouble(ordinal);
+        if (reader.IsDBNull(ordinal)) return 0f;
+
+        var fieldType = reader.GetFieldType(ordinal);
+
+        if (fieldType == typeof(double))  return (float)reader.GetDouble(ordinal);
+        if (fieldType == typeof(decimal)) return (float)reader.GetDecimal(ordinal);
+        if (fieldType == typeof(int))     return (float)reader.GetInt32(ordinal);
+        if (fieldType == typeof(long))    return (float)reader.GetInt64(ordinal);
+        if (fieldType == typeof(float))   return reader.GetFloat(ordinal);
+
+        return Convert.ToSingle(reader.GetValue(ordinal));
     }
 }
