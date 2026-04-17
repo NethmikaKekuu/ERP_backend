@@ -1,7 +1,12 @@
 using ForecastService.Services;
 using ForecastService.Repositories;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var isRunningInContainer = string.Equals(
+    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
 
 // Add services
 builder.Services.AddScoped<ISalesRepository, SalesRepository>();
@@ -17,7 +22,33 @@ builder.Services.AddHostedService<BackgroundRetrainingWorker>();
 
 // Add API documentation
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "InsightERP Forecast Service",
+        Version = "1.0"
+    });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token (without the 'Bearer ' prefix)"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 builder.Services.AddControllers();
 
@@ -53,10 +84,10 @@ try
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sales Forecasting API v1");
-            c.RoutePrefix = string.Empty; // Swagger at root
+            c.SwaggerEndpoint("v1/swagger.json", "Sales Forecasting API v1");
+            c.RoutePrefix = "swagger";
         });
-        logger.LogInformation("Swagger configured at: http://localhost:5005/");
+        logger.LogInformation("Swagger configured at: http://localhost:5005/swagger");
     }
     else
     {
@@ -65,7 +96,10 @@ try
         app.UseHsts();
     }
 
-    app.UseHttpsRedirection();
+    if (!isRunningInContainer)
+    {
+        app.UseHttpsRedirection();
+    }
     app.UseStaticFiles();
     app.UseRouting();
 
@@ -88,7 +122,7 @@ try
     logger.LogInformation("════════════════════════════════════════════════════════════════");
     logger.LogInformation("Application initialized successfully");
     logger.LogInformation("Base URL: http://localhost:5005");
-    logger.LogInformation("Swagger UI: http://localhost:5005/");
+    logger.LogInformation("Swagger UI: http://localhost:5005/swagger");
     logger.LogInformation("════════════════════════════════════════════════════════════════");
 
     app.Run();
